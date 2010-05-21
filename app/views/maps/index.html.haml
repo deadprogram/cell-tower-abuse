@@ -1,0 +1,52 @@
+#map_canvas{:style=>'width:700px; height:450px'}
+
+- semantic_form_for @new_tower do |tower|
+  %input{:type => 'button', :id => 'select-location', :value => 'Pick'}
+  %br
+  Click here to be able to choose a spot on the map for the latitude and longitude. Please zoom in a bit so we can get the most accurate reading possible.
+  = tower.input :lat, :label => 'Latitude'
+  = tower.input :lng, :label => 'Longitude'
+  = tower.input :title
+  = tower.input :details
+  = tower.submit 'Add Tower'
+  
+
+:javascript
+  window.map = null;
+  window.new_tower = null;
+  window.towers = new Array();
+  $(document).ready(function(){
+    var latlng = new google.maps.LatLng(34.05,-118.25);
+    var myOptions = {
+      zoom: 12,
+      center: latlng,
+      mapTypeId: google.maps.MapTypeId.ROADMAP
+    };
+    window.map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
+    $.get('/towers', {}, function(data){
+      for(var i=0,l=data.length; i<l; i++){
+        window.towers.push(new google.maps.Marker({
+          position: new google.maps.LatLng(data[i].tower.lat, data[i].tower.lng),
+          map: map,
+          title: data[i].tower.title
+        }));
+      }
+      }, 'json');
+    $('#select-location').click(function(){
+      if(map.getZoom() < 14){alert('Please zoom in a bit so we can get a more accurate location');return false;}
+      google.maps.event.addListener(map, 'click', function(e){
+        var latlng = e.latLng;
+        $('#tower_lat').val(latlng.lat());
+        $('#tower_lng').val(latlng.lng());
+        if(window.new_tower != null){
+          window.new_tower.setMap(null);
+          window.new_tower = null;
+        }
+        window.new_tower = new google.maps.Marker({
+          position: latlng, 
+          map: map
+        });
+      });
+
+    });
+  });
