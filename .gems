@@ -1,4 +1,4 @@
 haml
 formtastic
 geokit
-ambethia-recaptcha
+ambethia-recaptcha --source gems.github.com
