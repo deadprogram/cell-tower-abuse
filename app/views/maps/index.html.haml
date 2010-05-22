@@ -15,6 +15,7 @@
   window.map = null;
   window.new_tower = null;
   window.towers = new Array();
+  window.tower_data = null;
   $(document).ready(function(){
     var latlng = new google.maps.LatLng(34.05,-118.25);
     var myOptions = {
@@ -24,12 +25,23 @@
     };
     window.map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
     $.get('/towers', {}, function(data){
+      window.tower_data = data;
       for(var i=0,l=data.length; i<l; i++){
         window.towers.push(new google.maps.Marker({
           position: new google.maps.LatLng(data[i].tower.lat, data[i].tower.lng),
           map: map,
           title: data[i].tower.title
         }));
+        infowindow = new google.maps.InfoWindow();
+        google.maps.event.addListener(window.towers[i], 'click', function(e){
+          var marker;
+          var i=0;
+          for(var l=window.towers.length; i<l; i++){
+            if(window.towers[i]==this){ marker = this; break;}
+          }
+          infowindow.setContent(window.tower_data[i].tower.details);
+          infowindow.open(map, marker);
+        });
       }
       }, 'json');
     $('#select-location').click(function(){
