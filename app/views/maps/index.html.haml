@@ -1,13 +1,23 @@
 #map_canvas{:style=>'width:700px; height:450px'}
 
-- semantic_form_for @new_tower do |tower|
+%div
+  Click pick to be able to choose a spot on the map for the latitude and longitude. Please zoom in a bit so we can get the most accurate reading possible.
+  %br
   %input{:type => 'button', :id => 'select-location', :value => 'Pick'}
   %br
-  Click here to be able to choose a spot on the map for the latitude and longitude. Please zoom in a bit so we can get the most accurate reading possible.
+  Enter an address or zip code below and click Center Map to center the map around a more specific area.
+  %br
+  %input{:type => 'text', :id => 'center-addr', :size => 50}
+  %input{:type => 'button', :id => 'center-map', :value => 'Center Map'}
+  %br
+  %br
+
+- semantic_form_for @new_tower do |tower|
   = tower.input :lat, :label => 'Latitude'
   = tower.input :lng, :label => 'Longitude'
   = tower.input :title
   = tower.input :details
+  = recaptcha_tags
   = tower.submit 'Add Tower'
   
 
@@ -16,7 +26,9 @@
   window.new_tower = null;
   window.towers = new Array();
   window.tower_data = null;
+  window.geocoder = null;
   $(document).ready(function(){
+    window.geocoder = new google.maps.Geocoder();
     var latlng = new google.maps.LatLng(34.05,-118.25);
     var myOptions = {
       zoom: 12,
@@ -24,6 +36,7 @@
       mapTypeId: google.maps.MapTypeId.ROADMAP
     };
     window.map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
+    
     $.get('/towers', {}, function(data){
       window.tower_data = data;
       for(var i=0,l=data.length; i<l; i++){
@@ -44,6 +57,8 @@
         });
       }
       }, 'json');
+    
+    
     $('#select-location').click(function(){
       if(map.getZoom() < 14){alert('Please zoom in a bit so we can get a more accurate location');return false;}
       google.maps.event.addListener(map, 'click', function(e){
@@ -59,6 +74,7 @@
           map: map
         });
       });
-
     });
+    
+    $('#center-map').click(center_zoom);
   });
